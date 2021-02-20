@@ -92,7 +92,6 @@ public class Simulate {
 
 
     public static String readCSVLine(String input, int line_num) throws Throwable {
-        System.out.println("reading csv line");
 
         String[] data = input.split(",");
         if (data.length > 13 || data.length < 11)
@@ -159,12 +158,9 @@ public class Simulate {
 
 
     public static void processCSVLine(StringBuilder fileOut) throws Throwable {
-        
-        System.out.println("processing csv line");
+    
         Graph superGraph = graphType();
-        System.out.println("supergraph created");
         ArrayList<Pair<Integer, Integer>> algorithms_for_instance = processAlgorithms(algorithms);
-        System.out.println("processing algorithms complete");
 
         //Write_to_csv times_elapsed_csv = new Write_to_csv(new long[algorithms_for_instance.size()]);
 
@@ -172,8 +168,6 @@ public class Simulate {
 
         ArrayList<Node> start_list = start_target_list.get(0);
         ArrayList<Node> target_list = start_target_list.get(1);
-
-        System.out.println("pre-processing done");
 
         for (Node startPoint : start_list) {
             for (Node targetPoint : target_list) {
@@ -202,7 +196,6 @@ public class Simulate {
 
                 
                 for (ArrayList<Edge> edges_removed_from_sub : instance_runs) {
-                    System.out.println("Beginning creation of subgraph and subgraph runs");
 
                     BigDecimal[] sums = new BigDecimal[algorithms_for_instance.size()];
                     for (int i = 0; i < avg_hit_time_all.length; i++) {
