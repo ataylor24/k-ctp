@@ -188,7 +188,7 @@ public class Simulate {
 
         ArrayList<Pair<Integer, Integer>> algorithms_for_instance = processAlgorithms(algorithms);
 
-        Write_to_csv times_elapsed_csv = new Write_to_csv(new long[algorithms_for_instance.size()]);
+        //Write_to_csv times_elapsed_csv = new Write_to_csv(new long[algorithms_for_instance.size()]);
 
         ArrayList<ArrayList<Node>> start_target_list = start_target_list(superGraph);
 
