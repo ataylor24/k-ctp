@@ -1,3 +1,5 @@
+//package com.ssaurel.dijsktra;
+//credit to Sylvain Saurel
 public class Edge implements Comparable<Edge>{
     Node fromNode;
     Node toNode;
@@ -22,7 +24,7 @@ public class Edge implements Comparable<Edge>{
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
-        str.append("" + toNode.key + "," +fromNode.key);
+        str.append(toNode.key + "," +fromNode.key);
         return str.toString();
     }
     

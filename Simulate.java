@@ -1,14 +1,18 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
-
-
+import java.util.Timer;
+import java.lang.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.math.MathContext;
 
 public class Simulate {
     static String rand_k = "RAND_K";
@@ -17,46 +21,68 @@ public class Simulate {
     static Random rand;
     static int count_failures = 0;
 
+    // fields for reading in csv
     static String removed_k_edges;
-
     static int num_of_rand_instances;
     static int k_approach_chosen;
     static ArrayList<Edge> edgeListRemoved = null;
 
+    // process input INPUT BEGINS
     static int k;
 
-    static String k_approach;
+    static String k_approach; // randomly select k edges from edge list of superGraph and
 
-    static Long seed;
-
-    static int numNodes;
-
-    static String graphType;
-
+    static Long seed; // used
+    static int numNodes; // used
+    static String graphType; // used
     static int numNodes_line;
 
-    static int start;
+    static int start; // used //-1 random, -2 all
+    static int target; // used // same as above
 
-    static int target;
+    // add constructor without start and target if possible
+    static int num_rand_s_and_t; // used
 
-    static int num_rand_s_and_t;
+    static String algorithms; // used
 
-    static String algorithms;
     static int num_runs_per_instance;
     static int num_rand_runs;
+
     static String human_readable_file;
-    static MathContext mc = new MathContext(2, RoundingMode.HALF_UP);
-
-
+    static MathContext mc = new MathContext(2, RoundingMode.HALF_UP) ;
 
     public static void main(String[] args) throws Throwable {
+        /*
+         * begin with circular, fully-connected, and grid graphs. write csv to produce instances of
+         * growing graphs of these kinds (later)
+         * 
+         * memory size: 1, 3, 10
+         * 
+         * output: describe what was run as an experiment; (input), ALG1, DIST_OPT, AVG_DIST_ALG,
+         * COMP_RATIO,
+         */
+
+        // add method to get opt distance in graph
+
+        // if all k, no further info. all possible k edges (only small graphs)
+        // if rand_k, num of random edge removals
+        // if given_edges, expect a list of specific edges to remove
+        // avoid repeats in random runs. maintain an arraylist of memory for all of the runs so as
+        // not to repeat instances
+
+
+        // NUM_OF_RAND_S_AND_T: IF S OR T IS FIXED, DRAW THE RANDOM S/T THAT MANY TIMES
+
+        // memory size is included in the algorithm field
+
+
         String input = "";
         File csv = new File(args[0]);
         Scanner scnr;
         long startTime = System.currentTimeMillis();
 
-        String output_filename = args[0].substring(0, args[0].length() - 4) + "_output.csv";
-        human_readable_file = args[0].substring(0, args[0].length() - 4) + "_hr_output.csv";
+        String output_filename = "" + args[0].substring(0, args[0].length() - 4) + "_output.csv";
+        human_readable_file = "" + args[0].substring(0, args[0].length() - 4) + "_hr_output.csv";
         System.out.println(output_filename);
 
         PrintWriter pw = new PrintWriter(new File(output_filename));
@@ -66,30 +92,29 @@ public class Simulate {
         try {
             scnr = new Scanner(csv);
             while (scnr.hasNextLine()) {
-                prog_check++;
-
+                ++prog_check;
+                // if (prog_check % 50 == 0) System.out.println("Working... " + prog_check);
                 input = scnr.nextLine().trim();
                 pw.write(readCSVLine(input, prog_check));
                 pw.flush();
                 long endTime_run = System.currentTimeMillis();
 
                 System.out
-                    .println("" + (endTime_run - startTime) / 1000.0D + " seconds to run input");
+                    .println((endTime_run - startTime) / (double) 1000 + " seconds to run input");
             }
-        } catch (FileNotFoundException fileNotFoundException) {
-
-            fileNotFoundException.printStackTrace();
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         } finally {
             System.out.println(count_failures);
             pw.close();
         }
         long endTime = System.currentTimeMillis();
 
-        System.out.println("" + (endTime - startTime) / 1000.0D + " seconds to finish");
+        System.out.println((endTime - startTime) / (double) 1000 + " seconds to finish");
 
         System.out.println(output_filename);
     }
-
 
     public static String readCSVLine(String input, int line_num) throws Throwable {
 
@@ -156,18 +181,22 @@ public class Simulate {
     }
 
 
-
     public static void processCSVLine(StringBuilder fileOut) throws Throwable {
-    
+
+
         Graph superGraph = graphType();
+
         ArrayList<Pair<Integer, Integer>> algorithms_for_instance = processAlgorithms(algorithms);
 
-        //Write_to_csv times_elapsed_csv = new Write_to_csv(new long[algorithms_for_instance.size()]);
+        Write_to_csv times_elapsed_csv = new Write_to_csv(new long[algorithms_for_instance.size()]);
 
         ArrayList<ArrayList<Node>> start_target_list = start_target_list(superGraph);
 
         ArrayList<Node> start_list = start_target_list.get(0);
         ArrayList<Node> target_list = start_target_list.get(1);
+
+        // double[] sum_super_graph = new double[algorithms_for_instance.size()];
+        // double[] avg_avg_comp_ratio = new double[algorithms_for_instance.size()];
 
         for (Node startPoint : start_list) {
             for (Node targetPoint : target_list) {
@@ -176,90 +205,109 @@ public class Simulate {
 
 
                 ArrayList<ArrayList<Edge>> instance_runs = edgeRemovalPerInstance(superGraph);
+                // System.out.println(instance_runs);
 
-                BigDecimal[] avg_hit_time_all = new BigDecimal[algorithms_for_instance.size()];
-                for (int i = 0; i < avg_hit_time_all.length; i++) {
-                    avg_hit_time_all[i] = BigDecimal.ZERO;
+                // for loop for each edgelist removal to create a given subgraph
+                // create for loop for algo's
+
+                /*
+                 * for (int m = 0; m < algorithms_for_instance.size(); ++m)
+                 * fileOut.append(",ALG,AVG_COST,COMP_RATIO,OPT,BT"); fileOut.append("\n");
+                 */
+
+                int inst_counter = 0;
+
+                BigDecimal[] sum_s_and_t = new BigDecimal[algorithms_for_instance.size()];
+                for (int i = 0; i < sum_s_and_t.length; ++i) {
+                    sum_s_and_t[i] = BigDecimal.ZERO;
                 }
 
-                BigDecimal[] av_avCR = new BigDecimal[algorithms_for_instance.size()];
-
-                for (int i = 0; i < avg_hit_time_all.length; i++) {
-                    av_avCR[i] = BigDecimal.ZERO;
+                BigDecimal[] av_avCr = new BigDecimal[algorithms_for_instance.size()];
+                for (int i = 0; i < sum_s_and_t.length; ++i) {
+                    av_avCr[i] = BigDecimal.ZERO;
                 }
 
-                double sum_OPT = 0;
-                double sum_BT = 0;
-                BigDecimal[] avg_hit_time_inst = new BigDecimal[algorithms_for_instance.size()];
-                ArrayList<ArrayList<BigDecimal[]>> arrayList5 =
+                int counter = 0;
+
+                double avg_bt_dist = 0; // Average backtrack distance
+                double avg_opt = 0; // average optimal distance
+                BigDecimal[] average_cost = new BigDecimal[algorithms_for_instance.size()];
+                ArrayList<ArrayList<BigDecimal[]>> comp_indiv_runs =
                     new ArrayList<ArrayList<BigDecimal[]>>();
 
-                
                 for (ArrayList<Edge> edges_removed_from_sub : instance_runs) {
+                    // System.out.println("THIS IS ONE SUBGRAPH " + counter++);
 
                     BigDecimal[] sums = new BigDecimal[algorithms_for_instance.size()];
-                    for (int i = 0; i < avg_hit_time_all.length; i++) {
+                    for (int i = 0; i < sum_s_and_t.length; ++i) {
                         sums[i] = BigDecimal.ZERO;
                     }
 
-                    ArrayList<BigDecimal[]> indiv_runs = new ArrayList<BigDecimal[]>();
-
-                    for (int i = 0; i < algorithms_for_instance.size(); i++) {
+                    ArrayList<BigDecimal[]> indiv_runs = new ArrayList<>();
+                    // System.out.println("size of alg " + algorithms_for_instance.size());
+                    for (int i = 0; i < algorithms_for_instance.size(); ++i) {
                         indiv_runs.add(new BigDecimal[num_rand_runs]);
                     }
 
+                    // double[][] opts = new double[num_rand_runs][algorithms_for_instance.size()];
 
                     Graph subGraph = new Graph(superGraph, edges_removed_from_sub);
 
                     int opt = subGraph.calcDistance(subGraph.start, subGraph.target);
 
-                    sum_OPT += opt;
+                    avg_opt += opt;
 
                     BFS pathCheck = null;
 
-                    if (!graphType.equals("complete") || k > numNodes - 2) {
+                    if (!(graphType.equals("complete") && k <= numNodes - 2))
                         pathCheck = new BFS(subGraph, subGraph.start, subGraph.target);
-                    }
+
                     if (pathCheck != null && !pathCheck.pathExistence()) {
                         count_failures++;
                         System.out.println("does not pass path check");
                         continue;
                     }
 
+                    // System.out.println("OPT VALUE " + opt);
+
                     Algorithm[][] algs = new Algorithm[num_rand_runs][];
-                    for (int i = 0; i < num_rand_runs; i++) {
+                    for (int i = 0; i < num_rand_runs; ++i) {
                         algs[i] = algorithmsForRun(algorithms_for_instance, superGraph, subGraph,
                             sums.length);
                     }
 
+                    // 3- for loops to thread, one to start, one to join, and one to store (sums +=
+                    // dist)
 
+                    // PRINT OUT A COMPLETE GRAPH AND A GRID
+                    // THEY NEED REFACTORING FOR SOME REASON
 
-                    Backtrack backtrack = new Backtrack(superGraph, subGraph);
-
-                    backtrack.run();
-                    int bt_dist = backtrack.dist;
-                    sum_BT += bt_dist;
+                    Backtrack bt = new Backtrack(superGraph, subGraph); // POTENTIALLY NOT
+                                                                        // THREADSAFE
+                    bt.run();
+                    int bt_dist = bt.dist;
+                    avg_bt_dist += bt_dist;
 
                     System.out.println("BT " + bt_dist);
                     System.out.println("OPT " + opt);
 
-                    for (int i = 0; i < num_rand_runs; i++) {
-                        Thread[] threads = new Thread[(algs[i]).length];
-
-                        for (int j = 0; j < (algs[i]).length; j++) {
+                    for (int i = 0; i < num_rand_runs; ++i) {
+                        Thread[] threads = new Thread[algs[i].length];
+                        for (int j = 0; j < algs[i].length; ++j) {
                             threads[j] = new Thread(algs[i][j]);
                             threads[j].start();
                         }
 
 
-                        for (int j = 0; j < threads.length; j++) {
+                        for (int j = 0; j < threads.length; ++j) {
+                            long startTime = System.nanoTime();
                             threads[j].join();
+                            // times_elapsed_by_alg[i][j] = System.nanoTime() - startTime;
                         }
 
+                        for (int j = 0; j < algs[i].length; ++j) {
 
-                        for (int j = 0; j < (algs[i]).length; j++) {
-
-                            BigDecimal bigDist = new BigDecimal((algs[i][j]).distance);
+                            BigDecimal bigDist = new BigDecimal(algs[i][j].distance);
 
                             sums[j] = sums[j].add(bigDist);
 
@@ -267,36 +315,40 @@ public class Simulate {
                         }
                     }
 
-                    BigDecimal[] avCr =
-                        new BigDecimal[algorithms_for_instance.size()];
+                    BigDecimal[] avCr = new BigDecimal[algorithms_for_instance.size()];
 
 
-                    for (int m = 0; m < sums.length; m++) {
-                        avCr[m] = sums[m].divide(BigDecimal.valueOf(opt), mc)
+                    for (int m = 0; m < sums.length; ++m) {
+                        avCr[m] = (sums[m].divide(BigDecimal.valueOf(opt), mc))
                             .divide(BigDecimal.valueOf(num_rand_runs), mc);
-                        av_avCR[m] = av_avCR[m].add(avCr[m]);
-                        avg_hit_time_inst[m] = sums[m].divide(BigDecimal.valueOf(num_rand_runs));
-                        avg_hit_time_all[m] = avg_hit_time_all[m]
-                            .add(avg_hit_time_inst[m].divide(BigDecimal.valueOf(num_rand_runs)));
+                        av_avCr[m] = av_avCr[m].add(avCr[m]);
+                        average_cost[m] = sums[m].divide(BigDecimal.valueOf(num_rand_runs)); // was
+                        sum_s_and_t[m] = sum_s_and_t[m].add(average_cost[m].divide(BigDecimal.valueOf(num_rand_runs)));
+                                                                                             // num_runs_per_instance
                     }
 
-
-                    arrayList5.add(indiv_runs);
+                    inst_counter++;
+                    comp_indiv_runs.add(indiv_runs);
                 }
-                fileOut = updateCSVOutput1(fileOut, avg_hit_time_inst, avg_hit_time_all,
-                    sum_OPT / num_rand_runs, sum_BT / num_rand_runs, algorithms_for_instance);
-
+                fileOut = updateCSVOutput1(fileOut, average_cost, sum_s_and_t, avg_opt / num_rand_runs,
+                    avg_bt_dist / num_rand_runs, algorithms_for_instance);
 
                 fileOut.append("CR_AVG,");
-                fileOut = updateCSVOutput2(fileOut, av_avCR, algorithms_for_instance, arrayList5);
-
+                fileOut = updateCSVOutput2(fileOut, av_avCr, algorithms_for_instance,
+                    comp_indiv_runs);
 
                 fileOut.append("\n");
             }
+            // times_elapsed_csv.writeToCsv();
+
         }
+
+        // good average time has good mixing point,
+        // worst case don't want a good mixing time
+
+
+        return;
     }
-
-
 
     public static ArrayList<Pair<Integer, Integer>> processAlgorithms(String algorithms) {
         ArrayList<Pair<Integer, Integer>> algorithm_memory =
@@ -324,505 +376,479 @@ public class Simulate {
 
             }
             if (algorithm.equals("BiasedRandWalk")) {
-                algorithm_memory.add(new Pair<Integer,Integer>(0, memSize));
+                algorithm_memory.add(new Pair(0, memSize));
             }
             if (algorithm.equals("BiasedRandWalkMemory")) {
-                algorithm_memory.add(new Pair<Integer,Integer>(1, memSize));
+                algorithm_memory.add(new Pair(1, memSize));
             }
             if (algorithm.equals("BiasedRandWalkMemWeighting")) {
-                algorithm_memory.add(new Pair<Integer,Integer>(2, memSize));
+                algorithm_memory.add(new Pair(2, memSize));
             }
             if (algorithm.equals("SimpleRandomWalk")) {
-                algorithm_memory.add(new Pair<Integer,Integer>(3, memSize));
+                algorithm_memory.add(new Pair(3, memSize));
             }
             if (algorithm.equals("SimpleRandWalkMemory")) {
-                algorithm_memory.add(new Pair<Integer,Integer>(4, memSize));
+                algorithm_memory.add(new Pair(4, memSize));
             }
             if (algorithm.equals("BiasedRandWalkSmart")) {
-                algorithm_memory.add(new Pair<Integer,Integer>(5, memSize));
+                algorithm_memory.add(new Pair(5, memSize));
             }
             if (algorithm.equals("BiasedRandWalkMemorySmart")) {
-                algorithm_memory.add(new Pair<Integer,Integer>(6, memSize));
+                algorithm_memory.add(new Pair(6, memSize));
             }
             if (algorithm.equals("BiasedRandWalkMemWeightingSmart")) {
-                algorithm_memory.add(new Pair<Integer,Integer>(7, memSize));
+                algorithm_memory.add(new Pair(7, memSize));
             }
             if (algorithm.equals("SimpleRandomWalkSmart")) {
-                algorithm_memory.add(new Pair<Integer,Integer>(8, memSize));
+                algorithm_memory.add(new Pair(8, memSize));
             }
             if (algorithm.equals("SimpleRandWalkMemorySmart")) {
-                algorithm_memory.add(new Pair<Integer,Integer>(9, memSize));
+                algorithm_memory.add(new Pair(9, memSize));
             }
             if (algorithm.equals("BiasedRandWalkMemoryFlush")) {
-                algorithm_memory.add(new Pair<Integer,Integer>(10, memSize));
+                algorithm_memory.add(new Pair(10, memSize));
             }
             if (algorithm.equals("BiasedRandWalkMemWeightingFlush")) {
-                algorithm_memory.add(new Pair<Integer,Integer>(11, memSize));
+                algorithm_memory.add(new Pair(11, memSize));
             }
             if (algorithm.equals("SimpleRandWalkMemoryFlush")) {
-                algorithm_memory.add(new Pair<Integer,Integer>(12, memSize));
+                algorithm_memory.add(new Pair(12, memSize));
             }
         }
 
         return algorithm_memory;
     }
 
+    public static Algorithm[] algorithmsForRun(
+        ArrayList<Pair<Integer, Integer>> algorithms_for_instance, Graph superGraph, Graph subGraph,
+        int size) {
+        Algorithm[] algs = new Algorithm[size];
+        int index_alg = 0;
 
+        for (Pair<Integer, Integer> alg_memsize : algorithms_for_instance) {
 
-    public static Algorithm[] algorithmsForRun(ArrayList<Pair<Integer, Integer>> paramArrayList,
-        Graph paramGraph1, Graph paramGraph2, int paramInt) {
-        Algorithm[] arrayOfAlgorithm = new Algorithm[paramInt];
-        int b = 0;
+            switch ((int) alg_memsize.val1) {
 
-        for (Pair<Integer, Integer> pair : paramArrayList) {
-
-            switch (((Integer) pair.val1).intValue()) {
-
-                case 0:
-                    arrayOfAlgorithm[b] = new BiasedRandWalk(seed, paramGraph1, paramGraph2);
+                case 0: {
+                    algs[index_alg] = new BiasedRandWalk(seed, superGraph, subGraph);
                     break;
-
-                case 1:
-                    arrayOfAlgorithm[b] = new BiasedRandWalkMemory(seed, paramGraph1, paramGraph2,
-                        ((Integer) pair.val2).intValue());
+                }
+                case 1: {
+                    algs[index_alg] = new BiasedRandWalkMemory(seed, superGraph, subGraph,
+                        (int) alg_memsize.val2);
                     break;
-
-                case 2:
-                    arrayOfAlgorithm[b] = new BiasedRandWalkMemWeighting(seed, paramGraph1,
-                        paramGraph2, ((Integer) pair.val2).intValue());
+                }
+                case 2: {
+                    algs[index_alg] = new BiasedRandWalkMemWeighting(seed, superGraph, subGraph,
+                        (int) alg_memsize.val2);
                     break;
+                }
 
-
-                case 3:
-                    arrayOfAlgorithm[b] = new SimpleRandomWalk(seed, paramGraph1, paramGraph2);
+                case 3: {
+                    algs[index_alg] = new SimpleRandomWalk(seed, superGraph, subGraph);
                     break;
-
-                case 4:
-                    arrayOfAlgorithm[b] = new SimpleRandWalkMemory(seed, paramGraph1, paramGraph2,
-                        ((Integer) pair.val2).intValue());
+                }
+                case 4: {
+                    algs[index_alg] = new SimpleRandWalkMemory(seed, superGraph, subGraph,
+                        (int) alg_memsize.val2);
                     break;
-
-                case 5:
-                    arrayOfAlgorithm[b] = new BiasedRandWalkSmart(seed, paramGraph1, paramGraph2);
+                }
+                case 5: {
+                    algs[index_alg] = new BiasedRandWalkSmart(seed, superGraph, subGraph);
                     break;
-
-                case 6:
-                    arrayOfAlgorithm[b] = new BiasedRandWalkMemSmart(seed.longValue(), paramGraph1,
-                        paramGraph2, ((Integer) pair.val2).intValue());
+                }
+                case 6: {
+                    algs[index_alg] = new BiasedRandWalkMemSmart(seed, superGraph, subGraph,
+                        (int) alg_memsize.val2);
                     break;
-
-                case 7:
-                    arrayOfAlgorithm[b] = new BiasedRandWalkMemWeightSmart(seed.longValue(),
-                        paramGraph1, paramGraph2, ((Integer) pair.val2).intValue());
+                }
+                case 7: {
+                    algs[index_alg] = new BiasedRandWalkMemWeightSmart(seed, superGraph, subGraph,
+                        (int) alg_memsize.val2);
                     break;
+                }
 
-
-                case 8:
-                    arrayOfAlgorithm[b] = new SimpleRandWalkSmart(seed, paramGraph1, paramGraph2);
+                case 8: {
+                    algs[index_alg] = new SimpleRandWalkSmart(seed, superGraph, subGraph);
                     break;
-
-                case 9:
-                    arrayOfAlgorithm[b] = new SimpleRandWalkMemSmart(seed, paramGraph1, paramGraph2,
-                        ((Integer) pair.val2).intValue());
+                }
+                case 9: {
+                    algs[index_alg] = new SimpleRandWalkMemSmart(seed, superGraph, subGraph,
+                        (int) alg_memsize.val2);
                     break;
-
-                case 10:
-                    arrayOfAlgorithm[b] = new BiasedRandWalkMemFlush(seed, paramGraph1, paramGraph2,
-                        ((Integer) pair.val2).intValue());
+                }
+                case 10: {
+                    algs[index_alg] = new BiasedRandWalkMemFlush(seed, superGraph, subGraph,
+                        (int) alg_memsize.val2);
                     break;
-
-                case 11:
-                    arrayOfAlgorithm[b] = new BiasedRandWalkMemWeightFlush(seed, paramGraph1,
-                        paramGraph2, ((Integer) pair.val2).intValue());
+                }
+                case 11: {
+                    algs[index_alg] = new BiasedRandWalkMemWeightFlush(seed, superGraph, subGraph,
+                        (int) alg_memsize.val2);
                     break;
-
-                case 12:
-                    arrayOfAlgorithm[b] = new SimpleRandWalkMemFlush(seed, paramGraph1, paramGraph2,
-                        ((Integer) pair.val2).intValue());
+                }
+                case 12: {
+                    algs[index_alg] = new SimpleRandWalkMemFlush(seed, superGraph, subGraph,
+                        (int) alg_memsize.val2);
                     break;
-
-                default:
+                }
+                default: {
                     throw new RuntimeException("Unknown Algorithm");
+                }
             }
-
-            b++;
+            ++index_alg;
         }
 
-        return arrayOfAlgorithm;
+        return algs;
     }
 
+    public static ArrayList<Edge> parseEdgeList(String edgeList, int numNodes) {
 
-    public static ArrayList<Edge> parseEdgeList(String paramString, int paramInt) {
-        String[] arrayOfString = paramString.split("\\],\\[");
+        String[] edges = edgeList.split("\\],\\[");
 
-        ArrayList<Integer[]> arrayList = new ArrayList<Integer[]>();
+        ArrayList<Integer[]> holder = new ArrayList<Integer[]>();
 
-        for (int b = 0; b < arrayOfString.length; b++) {
-            if (b == 0) {
-                arrayOfString[b] = arrayOfString[b].substring(2);
-                String[] arrayOfString1 = arrayOfString[b].split(",");
-                int i = Integer.parseInt(arrayOfString1[0]);
-                int j = Integer.parseInt(arrayOfString1[1]);
-                int k = Integer.parseInt(arrayOfString1[2]);
+        for (int i = 0; i < edges.length; ++i) {
+            if (i == 0) {
+                edges[i] = edges[i].substring(2);
+                String[] temp = edges[i].split(",");
+                int toNode = Integer.parseInt(temp[0]);
+                int fromNode = Integer.parseInt(temp[1]);
+                int weight = Integer.parseInt(temp[2]);
 
-                arrayList.add(
-                    new Integer[] {Integer.valueOf(i), Integer.valueOf(j), Integer.valueOf(k)});
-            } else if (b == arrayOfString.length - 1) {
-                arrayOfString[b] = arrayOfString[b].substring(0, arrayOfString[b].length() - 2);
-                String[] arrayOfString1 = arrayOfString[b].split(",");
-                int i = Integer.parseInt(arrayOfString1[0]);
-                int j = Integer.parseInt(arrayOfString1[1]);
-                int k = Integer.parseInt(arrayOfString1[2]);
+                holder.add(new Integer[] {toNode, fromNode, weight});
+            } else if (i == edges.length - 1) {
+                edges[i] = edges[i].substring(0, edges[i].length() - 2);
+                String[] temp = edges[i].split(",");
+                int toNode = Integer.parseInt(temp[0]);
+                int fromNode = Integer.parseInt(temp[1]);
+                int weight = Integer.parseInt(temp[2]);
 
-                arrayList.add(
-                    new Integer[] {Integer.valueOf(i), Integer.valueOf(j), Integer.valueOf(k)});
+                holder.add(new Integer[] {toNode, fromNode, weight});
             } else {
-                String[] arrayOfString1 = arrayOfString[b].split(",");
-                int i = Integer.parseInt(arrayOfString1[0]);
-                int j = Integer.parseInt(arrayOfString1[1]);
-                int k = Integer.parseInt(arrayOfString1[2]);
+                String[] temp = edges[i].split(",");
+                int toNode = Integer.parseInt(temp[0]);
+                int fromNode = Integer.parseInt(temp[1]);
+                int weight = Integer.parseInt(temp[2]);
 
-                arrayList.add(
-                    new Integer[] {Integer.valueOf(i), Integer.valueOf(j), Integer.valueOf(k)});
+                holder.add(new Integer[] {toNode, fromNode, weight});
             }
         }
-        return createEdgeList(arrayList, paramInt);
+        return createEdgeList(holder, numNodes);
     }
 
-    public static ArrayList<Edge> createEdgeList(ArrayList<Integer[]> paramArrayList,
-        int paramInt) {
-        ArrayList<Edge> arrayList = new ArrayList<Edge> ();
-        ArrayList<Node> arrayList1 = new ArrayList<Node>();
-        for (int b = 0; b < paramInt; b++) {
-            Node node = new Node(new ArrayList<>(), Integer.valueOf(b));
-            arrayList1.add(node);
+    public static ArrayList<Edge> createEdgeList(ArrayList<Integer[]> edges, int numNodes) {
+        ArrayList<Edge> edgeList = new ArrayList<Edge>();
+        ArrayList<Node> nodeList = new ArrayList<Node>();
+        for (int i = 0; i < numNodes; ++i) {
+            Node node = new Node(new ArrayList<Edge>(), i);
+            nodeList.add(node);
         }
 
-        for (Integer[] arrayOfInteger : paramArrayList) {
-            int i = arrayOfInteger[0].intValue();
-            int j = arrayOfInteger[1].intValue();
-            int k = arrayOfInteger[2].intValue();
+        for (Integer[] edge : edges) {
+            int toNodeKey = edge[0];
+            int fromNodeKey = edge[1];
+            int weight = edge[2];
 
             Node node1 = null;
             Node node2 = null;
-            for (Node node : arrayList1) {
-                if (i == node.key.intValue()) {
+            for (Node node : nodeList) {
+                if (toNodeKey == node.key) {
                     node1 = node;
                 }
-                if (j == node.key.intValue()) {
+                if (fromNodeKey == node.key) {
                     node2 = node;
                 }
                 if (node1 != null && node2 != null) {
-                    Edge edge1 = new Edge(node2, node1, k);
-                    Edge edge2 = new Edge(node1, node2, k);
-                    node2.edgeList.add(edge1);
-                    node1.edgeList.add(edge2);
-                    arrayList.add(edge1);
+                    Edge newEdge = new Edge(node2, node1, weight);
+                    Edge altEdge = new Edge(node1, node2, weight);
+                    node2.edgeList.add(newEdge);
+                    node1.edgeList.add(altEdge);
+                    edgeList.add(newEdge);
+                    break;
                 }
             }
         }
-
-        return arrayList;
+        return edgeList;
     }
 
-
-
     @Deprecated
-    public static StringBuilder deprecated_updateCSVOutput1(StringBuilder paramStringBuilder,
-        BigDecimal[] paramArrayOfBigDecimal1, BigDecimal[] paramArrayOfBigDecimal2,
-        double paramDouble, int paramInt, ArrayList<Pair<Integer, Integer>> paramArrayList,
-        ArrayList<BigDecimal[]> paramArrayList1) {
-        int b = 0;
-        for (Pair<Integer, Integer> pair : paramArrayList) {
+    public static StringBuilder deprecated_updateCSVOutput1(StringBuilder fileOut,
+        BigDecimal[] average_cost, BigDecimal[] avCr, double opt, int bt_dist,
+        ArrayList<Pair<Integer, Integer>> algorithms_for_instance,
+        ArrayList<BigDecimal[]> indiv_runs) {
+        int count_alg = 0;
+        for (Pair<Integer, Integer> alg_memsize : algorithms_for_instance) {
 
-            paramStringBuilder.append(retrieve_name(((Integer) pair.val1).intValue()));
+            fileOut.append(retrieve_name(((int) alg_memsize.val1)));
 
-            int b1 = b;
+            int temp = count_alg;
 
-            paramStringBuilder
-                .append("" + paramArrayOfBigDecimal1[b] + "," + paramArrayOfBigDecimal1[b] + ","
-                    + paramArrayOfBigDecimal2[b++] + "," + paramDouble);
+            fileOut.append(
+                average_cost[count_alg] + "," + avCr[count_alg++] + "," + opt + "," + bt_dist);
 
+            if (count_alg >= algorithms_for_instance.size()) {
+                fileOut.append("\n");
+                for (int j = 0; j < indiv_runs.get(0).length; ++j) {
+                    for (int i = 0; i < algorithms_for_instance.size(); ++i) {
 
-            if (b >= paramArrayList.size()) {
-                paramStringBuilder.append("\n");
-                for (int b2 = 0; b2 < ((BigDecimal[]) paramArrayList1.get(0)).length; b2++) {
-                    for (int b3 = 0; b3 < paramArrayList.size(); b3++) {
-
-                        paramStringBuilder.append("," + retrieve_name(
-                            ((Integer) ((Pair) paramArrayList.get(b3)).val1).intValue()));
-                        paramStringBuilder.append(((BigDecimal[]) paramArrayList1.get(b3))[b2]);
-                        if (b3 == paramArrayList.size() - 1) {
-                            paramStringBuilder.append("\n");
-                        } else {
-                            paramStringBuilder.append(",,,");
-                        }
+                        fileOut
+                            .append("," + retrieve_name((int) algorithms_for_instance.get(i).val1));
+                        fileOut.append(indiv_runs.get(i)[j]);
+                        if (i == algorithms_for_instance.size() - 1)
+                            fileOut.append("\n");
+                        else
+                            fileOut.append(",,,");
                     }
                 }
-                continue;
-            }
-            paramStringBuilder.append(",");
+            } else
+                fileOut.append(",");
         }
-
-        return paramStringBuilder;
+        // System.out.println(fileOut.toString());
+        return fileOut;
     }
-
-
 
     @Deprecated
-    public static StringBuilder deprecated_updateCSVOutput2(StringBuilder paramStringBuilder,
-        BigDecimal[] paramArrayOfBigDecimal1, BigDecimal[] paramArrayOfBigDecimal2,
-        ArrayList<Pair<Integer, Integer>> paramArrayList) {
-        int b = 0;
-        for (Pair<Integer, Integer> pair : paramArrayList) {
-
-            paramStringBuilder.append(retrieve_name(((Integer) pair.val1).intValue()));
-            if (paramArrayOfBigDecimal1[b].equals(BigDecimal.valueOf(0L))) {
-                paramStringBuilder.append(" sum_s_and_t is 0,");
-                if (b >= paramArrayList.size())
-                    paramStringBuilder.append("\n");
-            } else {
-                paramStringBuilder.append(
-                    paramArrayOfBigDecimal2[b].divide(BigDecimal.valueOf(num_runs_per_instance)));
-                if (b >= paramArrayList.size()) {
-                    paramStringBuilder.append("\n");
-                } else {
-                    paramStringBuilder.append(",,,");
-                }
-            }
-            b++;
-        }
-        return paramStringBuilder;
-    }
-/*
- * fileOut = updateCSVOutput1(fileOut, avg_hit_time_inst, avg_hit_time_all,
-                    sum_BT / num_rand_runs, sum_OPT / num_rand_runs, algorithms_for_instance);
-
-
-                
-                fileOut = updateCSVOutput2(fileOut, av_avCR, algorithms_for_instance, arrayList5);
- * 
- * */
-
-    public static StringBuilder updateCSVOutput1(StringBuilder fileOut,
-        BigDecimal[] avg_hit_time_inst, BigDecimal[] avg_hit_time_all,
-        double avg_OPT, double avg_BT,
+    public static StringBuilder deprecated_updateCSVOutput2(StringBuilder fileOut,
+        BigDecimal[] sum_s_and_t, BigDecimal[] av_avCr,
         ArrayList<Pair<Integer, Integer>> algorithms_for_instance) {
-        fileOut.append("OPT," + avg_OPT + "\n");
-        fileOut.append("BT," + avg_BT + "\n");
+        int count_alg = 0;
+        for (Pair<Integer, Integer> alg_memsize : algorithms_for_instance) {
+
+            fileOut.append(retrieve_name(((int) alg_memsize.val1)));
+            if (sum_s_and_t[count_alg].equals(BigDecimal.valueOf(0))) {
+                fileOut.append(" sum_s_and_t is 0,");
+                if (count_alg >= algorithms_for_instance.size())
+                    fileOut.append("\n");
+            } else {
+                fileOut
+                    .append(av_avCr[count_alg].divide(BigDecimal.valueOf(num_runs_per_instance)));
+                if (count_alg >= algorithms_for_instance.size())
+                    fileOut.append("\n");
+                else
+                    fileOut.append(",,,");
+            }
+            ++count_alg;
+        }
+        return fileOut;
+    }
+
+    public static StringBuilder updateCSVOutput1(StringBuilder fileOut, BigDecimal[] average_cost, BigDecimal[] sum_s_and_t,
+        double opt, double bt_dist, ArrayList<Pair<Integer, Integer>> algorithms_for_instance) {
+        fileOut.append("OPT," + opt + "\n");
+        fileOut.append("BT," + bt_dist + "\n");
         fileOut.append(",");
 
-        for (Pair<Integer, Integer> pair : algorithms_for_instance) {
+        for (Pair<Integer, Integer> alg_memsize : algorithms_for_instance) {
 
-            fileOut.append(retrieve_name(((Integer) pair.val1).intValue()));
+
+            fileOut.append(retrieve_name(((int) alg_memsize.val1)));
         }
         fileOut.append("\n");
         fileOut.append("AVG_COST,");
-        for (int b = 0; b < avg_hit_time_inst.length; b++) {
-            fileOut.append("" + avg_hit_time_all[b] + ",");
+        for (int i = 0; i < average_cost.length; i++) {
+            fileOut.append(sum_s_and_t[i] + ",");
         }
         fileOut.append("\n");
         return fileOut;
     }
 
-
-
     public static StringBuilder updateCSVOutput2(StringBuilder fileOut,
-        BigDecimal[] av_avCR, ArrayList<Pair<Integer, Integer>> algorithms_for_instance,
-        ArrayList<ArrayList<BigDecimal[]>> paramArrayList1) {
-        int b1 = 0;
-        for (Pair<Integer, Integer> pair : algorithms_for_instance) {
-            fileOut.append(
-                av_avCR[b1].divide(BigDecimal.valueOf(num_runs_per_instance)));
-            if (b1 >= algorithms_for_instance.size()) {
+        BigDecimal[] av_avCr, ArrayList<Pair<Integer, Integer>> algorithms_for_instance,
+        ArrayList<ArrayList<BigDecimal[]>> comp_indiv_runs) {
+        int count_alg = 0;
+        for (Pair<Integer, Integer> alg_memsize : algorithms_for_instance) {
+            fileOut.append(av_avCr[count_alg].divide(BigDecimal.valueOf(num_runs_per_instance)));
+            if (count_alg >= algorithms_for_instance.size())
                 fileOut.append("\n");
-            } else {
+            else
                 fileOut.append(",");
-            }
-            b1++;
+            ++count_alg;
         }
         fileOut.append("\n");
 
         fileOut.append("INDIV RUN DATA\n");
-        for (int b2 = 0; b2 < paramArrayList1.size(); b2++) {
-            fileOut.append("Run " + b2 + ",");
-            for (int b = 0; b < (paramArrayList1.get(b2)).size(); b++) {
-                BigDecimal bigDecimal1 = BigDecimal.ZERO;
-                BigDecimal bigDecimal2 = BigDecimal
-                    .valueOf(((BigDecimal[]) (paramArrayList1.get(b2)).get(b)).length);
-                for (int b3 = 0; b3 < ((BigDecimal[]) (paramArrayList1.get(b2))
-                    .get(b)).length; b3++) {
-                    bigDecimal1 = bigDecimal1
-                        .add(((BigDecimal[]) (paramArrayList1.get(b2)).get(b))[b3]);
+        for (int i = 0; i < comp_indiv_runs.size(); i++) {
+            fileOut.append("Run " + i + ",");
+            for (int j = 0; j < comp_indiv_runs.get(i).size(); j++) {
+                BigDecimal sum = BigDecimal.ZERO;
+                BigDecimal num_rand_runs = BigDecimal.valueOf(comp_indiv_runs.get(i).get(j).length);
+                for (int k = 0; k < comp_indiv_runs.get(i).get(j).length; k++) {
+                    sum = sum.add(comp_indiv_runs.get(i).get(j)[k]);
                 }
-                fileOut.append("" + bigDecimal1.divide(bigDecimal2) + ",");
+                fileOut.append(sum.divide(num_rand_runs) + ",");
             }
             fileOut.append("\n");
         }
         return fileOut;
     }
 
-    public static String retrieve_name(int paramInt) {
-        switch (paramInt) {
+    public static String retrieve_name(int algo_index) {
+        switch (algo_index) {
 
-            case 0:
+            case 0: {
                 return "BR,";
-
-            case 1:
+            }
+            case 1: {
                 return "BRM,";
-
-            case 2:
+            }
+            case 2: {
                 return "BRMW,";
-
-            case 3:
+            }
+            case 3: {
                 return "SR,";
-
-            case 4:
+            }
+            case 4: {
                 return "SRM,";
-
-            case 5:
+            }
+            case 5: {
                 return "BRS,";
-
-            case 6:
+            }
+            case 6: {
                 return "BRMS,";
-
-            case 7:
+            }
+            case 7: {
                 return "BRMWS,";
-
-            case 8:
+            }
+            case 8: {
                 return "SRS,";
-
-            case 9:
+            }
+            case 9: {
                 return "SRMS,";
-
-            case 10:
+            }
+            case 10: {
                 return "BRMF,";
-
-            case 11:
+            }
+            case 11: {
                 return "BRMWF,";
-
-            case 12:
+            }
+            case 12: {
                 return "SRMF,";
+            }
+            default: {
+                throw new RuntimeException("Unknown Algorithm");
+            }
         }
-
-        throw new RuntimeException("Unknown Algorithm");
     }
-
-
 
     public static Graph graphType() {
-        if (graphType.toLowerCase().equals("grid"))
+        if (graphType.toLowerCase().equals("grid")) {
             return new Grid(numNodes, start, target);
-        if (graphType.toLowerCase().equals("cyclic"))
+        } else if (graphType.toLowerCase().equals("cyclic")) {
             return new Cyclic(numNodes, start, target);
-        if (graphType.toLowerCase().equals("lollipop")) {
+        } else if (graphType.toLowerCase().equals("lollipop")) {
             return new lollipop(numNodes, numNodes_line, start, target);
+        } else {
+            return new Complete(numNodes, start, target);
         }
-        return new Complete(numNodes, start, target);
     }
 
+    public static ArrayList<ArrayList<Node>> start_target_list(Graph superGraph) {
+        ArrayList<Node> start_list = new ArrayList<Node>();
+        ArrayList<Node> target_list = new ArrayList<Node>();
 
-    public static ArrayList<ArrayList<Node>> start_target_list(Graph paramGraph) {
-        ArrayList<Node> arrayList1 = new ArrayList();
-        ArrayList<Node> arrayList2 = new ArrayList();
-
-
-
+        // add a check for start == -1 and target == -2 and vice versa throw error Ille
+        // random source target check
         if (start == -1 || target == -1) {
-            for (int b = 0; b < num_rand_s_and_t; b++) {
+            for (int j = 0; j < num_rand_s_and_t; ++j) {
+
                 while (start == target) {
                     if (start == -1)
                         start = rand.nextInt(numNodes);
-                    if (target == -1) {
+                    if (target == -1)
                         target = rand.nextInt(numNodes);
-                    }
                 }
-                arrayList1.add(paramGraph.nodeList.get(start));
-                arrayList2.add(paramGraph.nodeList.get(target));
+
+                start_list.add(superGraph.nodeList.get(start));
+                target_list.add(superGraph.nodeList.get(target));
             }
+        }
 
-        } else if (start == -2 || target == -2) {
-            for (Node node : paramGraph.nodeList) {
-                if (start == -2 || node.key.intValue() == start) {
-                    for (Node node1 : paramGraph.nodeList) {
-                        if ((target == -2 || node1.key.intValue() == target)
-                            && node.key != node1.key) {
-
-                            arrayList1.add(node);
-                            arrayList2.add(node1);
+        else if (start == -2 || target == -2) {
+            for (Node currentStart : superGraph.nodeList) {
+                if (start == -2 || currentStart.key == start) {
+                    for (Node currentTarget : superGraph.nodeList) {
+                        if ((target == -2 || currentTarget.key == target)
+                            && currentStart.key != currentTarget.key) {
+                            start_list.add(currentStart);
+                            target_list.add(currentTarget);
                         }
                     }
                 }
             }
         } else {
-            arrayList1.add(paramGraph.nodeList.get(start));
-            arrayList2.add(paramGraph.nodeList.get(target));
+            start_list.add(superGraph.nodeList.get(start));
+            target_list.add(superGraph.nodeList.get(target));
         }
 
-        ArrayList<ArrayList<Node>> arrayList = new ArrayList();
-        arrayList.add(arrayList1);
-        arrayList.add(arrayList2);
+        ArrayList<ArrayList<Node>> start_target_list = new ArrayList<ArrayList<Node>>();
+        start_target_list.add(start_list);
+        start_target_list.add(target_list);
 
-        return arrayList;
+        return start_target_list;
     }
 
-    public static ArrayList<ArrayList<Edge>> edgeRemovalPerInstance(Graph paramGraph) {
-        ArrayList<ArrayList<Edge>> arrayList = new ArrayList();
+    public static ArrayList<ArrayList<Edge>> edgeRemovalPerInstance(Graph superGraph) {
+        ArrayList<ArrayList<Edge>> instance_runs = new ArrayList<ArrayList<Edge>>();
         if (graphType.equals("cyclic")) {
-            ArrayList<Edge> arrayList1 = new ArrayList();
-            int b;
-            for (b = 0; b < paramGraph.edgeList.size(); b++) {
-                Edge edge = paramGraph.edgeList.get(b);
-                if (edge.toNode.key.intValue() == start && edge.fromNode.key.intValue() == target) {
-                    arrayList1.add(paramGraph.edgeList.get(b));
+            ArrayList<Edge> edgesToRemove = new ArrayList<Edge>();
+            for (int i = 0; i < superGraph.edgeList.size(); ++i) {
+                Edge temp = superGraph.edgeList.get(i);
+                if (temp.toNode.key == start && temp.fromNode.key == target) {
+                    edgesToRemove.add(superGraph.edgeList.get(i));
                     break;
                 }
             }
-            for (b = 0; b < num_runs_per_instance; b++)
-                arrayList.add(arrayList1);
-            return arrayList;
+            for (int x = 0; x < num_runs_per_instance; ++x)
+                instance_runs.add(edgesToRemove);
+            return instance_runs;
         }
 
         if (k_approach_chosen == 0) {
-            for (int b = 0; b < num_runs_per_instance; b++) {
-                ArrayList<Edge> arrayList1 = new ArrayList();
-
-
-
-                ArrayList<Edge> arrayList2 = null;
+            for (int x = 0; x < num_runs_per_instance; ++x) {
+                ArrayList<Edge> edgesToRemove = new ArrayList<Edge>(); // make this a set to avoid
+                                                                       // removing the same edge,
+                                                                       // loop until set is of size
+                                                                       // k
+                ArrayList<Edge> superEdgeList = null;
 
                 if (graphType.equals("lollipop")) {
-                    arrayList2 = new ArrayList();
-                    int i = numNodes / 2;
-                    for (int b2 = 0; b2 < paramGraph.edgeList.size(); b2++) {
-                        Edge edge = paramGraph.edgeList.get(b2);
-                        if (edge.toNode.key.intValue() < i && edge.fromNode.key.intValue() < i)
-                            arrayList2.add(paramGraph.edgeList.get(b2));
+                    superEdgeList = new ArrayList<Edge>();
+                    int cutoff = numNodes / 2;
+                    for (int i = 0; i < superGraph.edgeList.size(); ++i) {
+                        Edge temp = superGraph.edgeList.get(i);
+                        if (temp.toNode.key < cutoff && temp.fromNode.key < cutoff)
+                            superEdgeList.add(superGraph.edgeList.get(i));
                     }
-                } else {
-                    arrayList2 = paramGraph.edgeList;
+                } else
+                    superEdgeList = superGraph.edgeList;
+
+
+                for (int f = 0; f < k; ++f) {
+                    Edge origEdge = superEdgeList.get(rand.nextInt(superEdgeList.size())); // removes
+                                                                                           // from
+                                                                                           // superGraph.clone
+                                                                                           // and
+                                                                                           // adds
+                                                                                           // reference
+                                                                                           // to
+                                                                                           // edges
+                                                                                           // to
+                                                                                           // remove
+
+                    // if super edgelist contains the flipped edge, it may remove the same edge
+                    // twice
+                    // Make sure edges exist, and only increment f when an edge is successfully
+                    // chose correctly
+                    edgesToRemove.add(origEdge);
                 }
-
-                for (int b1 = 0; b1 < k; b1++) {
-                    Edge edge = arrayList2.get(rand.nextInt(arrayList2.size()));
-
-
-
-                    arrayList1.add(edge);
-                }
-                arrayList.add(arrayList1);
+                instance_runs.add(edgesToRemove);
             }
-        } else if (k_approach_chosen == 1) {
-            arrayList.add(parseEdgeList(removed_k_edges, numNodes));
-        } else if (k_approach_chosen == 2) {
-
+        } else if (k_approach_chosen == 1) { // chosen
+            instance_runs.add(parseEdgeList(removed_k_edges, numNodes));
+        } else if (k_approach_chosen == 2) { // all
+            // bitshifting
         }
-        return arrayList;
+        return instance_runs;
     }
 }
-
-
-/*
- * Location: /Users/alextaylor/Desktop/sim_class_v15/!/Simulate.class Java compiler version: 9
- * (53.0) JD-Core Version: 1.1.3
- */

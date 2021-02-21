@@ -19,6 +19,7 @@ public class Backtrack {
             int path_distance = 0;
             ArrayList<Node> path = guide_g.findShortestPath(guide_g.start, guide_g.target);
             
+            
             for (Node potential : path) {
                 path_distance = 0;
                 next = checkEdgeList(curNode, potential);

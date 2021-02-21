@@ -1,4 +1,5 @@
-
+import java.util.ArrayList;
+import java.util.Random;
 
 public class Complete extends Graph {
 
@@ -14,16 +15,10 @@ public class Complete extends Graph {
                 if (i != j) {
                     int weight = this.weight;
                     Edge fromEdge = new Edge(nodeList.get(j), nodeList.get(i), weight);
-                    nodeList.get(j).edgeList.add(fromEdge);
+                    nodeList.get(i).edgeList.add(fromEdge);
                     edgeList.add(fromEdge);
                 }
             }
         }
     }
 }
-
-
-/*
- * Location: /Users/alextaylor/Desktop/sim_class_v15/!/Complete.class Java compiler version: 9
- * (53.0) JD-Core Version: 1.1.3
- */

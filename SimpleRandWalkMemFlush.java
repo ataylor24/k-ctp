@@ -15,36 +15,36 @@ public class SimpleRandWalkMemFlush extends Algorithm {
         this.memorySize = memorySize;
     }
     public void traverseGraph() {
-        Node curNode = this.subGraph.start;
+        
+        Node curNode = subGraph.start;
         int traversals = 0;
-        this.memory.add(curNode);
-
-        while (!curNode.equals(this.subGraph.target)) {
-
+        memory.add(curNode);
+        
+        while (!curNode.equals(subGraph.target)) {
+            
             Edge tempEdge = findNextNodeWithMemConstraint(curNode, curNode.edgeList.size());
-
+            
             if (tempEdge == null) {
-                this.memory.clear();
+                memory.clear();
                 tempEdge = findNextNodeWithoutMemConstraint(curNode, curNode.edgeList.size());
             }
-            this.distance = this.distance.add(BigInteger.valueOf(tempEdge.weight));
-
-            this.memory.addLast(curNode);
+            distance = distance.add(BigInteger.valueOf(tempEdge.weight));
+            
+            memory.addLast(curNode);
             curNode = tempEdge.toNode;
-
+            
             traversals++;
-            if (traversals >= this.max_traversal) {
-                this.distance = BigInteger.valueOf(-2);
+            if (traversals >= max_traversal) {
+                distance = BigInteger.valueOf(-2);
                 return;
             }
         }
     }
-
     private Edge findNextNodeWithoutMemConstraint(Node curNode, int size) {
-        int nextEdge = rand.nextInt(size);
-        return curNode.edgeList.get(nextEdge);
+            int nextEdge = rand.nextInt(size);
+            Edge chosenEdge = curNode.edgeList.get(nextEdge);
+            return chosenEdge;
     }
-
     private Edge findNextNodeWithMemConstraint(Node curNode, int size) {
         Edge chosenEdge = null;
         ArrayList<Edge> viableEdges = new ArrayList<Edge>();
@@ -59,12 +59,6 @@ public class SimpleRandWalkMemFlush extends Algorithm {
            chosenEdge = viableEdges.get(nextEdge);
            return chosenEdge;
        }
-       return null;
+       else return null;
     }
 }
-
-
-/*
- * Location: /Users/alextaylor/Desktop/sim_class_v15/!/SimpleRandWalkMemFlush.class Java compiler
- * version: 9 (53.0) JD-Core Version: 1.1.3
- */

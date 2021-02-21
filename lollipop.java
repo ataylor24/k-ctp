@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.Random;
+
 public class lollipop extends Graph {
     // m,n lollipop graph
 

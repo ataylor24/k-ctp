@@ -48,7 +48,7 @@ public class Node implements Comparable<Node>{
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
-        str.append("" + this.key + ": " + this.edgeList);
+        str.append(this.key + ": " + this.edgeList);
         return str.toString();
     }
 }
