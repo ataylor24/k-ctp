@@ -35,7 +35,9 @@ public class Simulate {
     static Long seed; // used
     static int numNodes; // used
     static String graphType; // used
+
     static int numNodes_line;
+    static boolean graphTypeVariant;
 
     static int start; // used //-1 random, -2 all
     static int target; // used // same as above
@@ -49,7 +51,7 @@ public class Simulate {
     static int num_rand_runs;
 
     static String human_readable_file;
-    static MathContext mc = new MathContext(2, RoundingMode.HALF_UP) ;
+    static MathContext mc = new MathContext(2, RoundingMode.HALF_UP);
 
     public static void main(String[] args) throws Throwable {
         /*
@@ -153,6 +155,8 @@ public class Simulate {
 
         if (graphType.equals("lollipop"))
             numNodes_line = Integer.parseInt(data[i++]);
+        if (graphType.equals("grid"))
+            graphTypeVariant = Boolean.valueOf(data[i++]);
 
         start = Integer.parseInt(data[i++]); // used //-1 random, -2 all
         target = Integer.parseInt(data[i++]); // used // same as above
@@ -188,7 +192,8 @@ public class Simulate {
 
         ArrayList<Pair<Integer, Integer>> algorithms_for_instance = processAlgorithms(algorithms);
 
-        //Write_to_csv times_elapsed_csv = new Write_to_csv(new long[algorithms_for_instance.size()]);
+        // Write_to_csv times_elapsed_csv = new Write_to_csv(new
+        // long[algorithms_for_instance.size()]);
 
         ArrayList<ArrayList<Node>> start_target_list = start_target_list(superGraph);
 
@@ -252,6 +257,8 @@ public class Simulate {
                     // double[][] opts = new double[num_rand_runs][algorithms_for_instance.size()];
 
                     Graph subGraph = new Graph(superGraph, edges_removed_from_sub);
+
+                    System.out.println(subGraph);
 
                     int opt = subGraph.calcDistance(subGraph.start, subGraph.target);
 
@@ -323,19 +330,20 @@ public class Simulate {
                             .divide(BigDecimal.valueOf(num_rand_runs), mc);
                         av_avCr[m] = av_avCr[m].add(avCr[m]);
                         average_cost[m] = sums[m].divide(BigDecimal.valueOf(num_rand_runs)); // was
-                        sum_s_and_t[m] = sum_s_and_t[m].add(average_cost[m].divide(BigDecimal.valueOf(num_rand_runs)));
-                                                                                             // num_runs_per_instance
+                        sum_s_and_t[m] = sum_s_and_t[m]
+                            .add(average_cost[m].divide(BigDecimal.valueOf(num_rand_runs)));
+                        // num_runs_per_instance
                     }
 
                     inst_counter++;
                     comp_indiv_runs.add(indiv_runs);
                 }
-                fileOut = updateCSVOutput1(fileOut, average_cost, sum_s_and_t, avg_opt / num_rand_runs,
-                    avg_bt_dist / num_rand_runs, algorithms_for_instance);
+                fileOut = updateCSVOutput1(fileOut, average_cost, sum_s_and_t,
+                    avg_opt / num_rand_runs, avg_bt_dist / num_rand_runs, algorithms_for_instance);
 
                 fileOut.append("CR_AVG,");
-                fileOut = updateCSVOutput2(fileOut, av_avCr, algorithms_for_instance,
-                    comp_indiv_runs);
+                fileOut =
+                    updateCSVOutput2(fileOut, av_avCr, algorithms_for_instance, comp_indiv_runs);
 
                 fileOut.append("\n");
             }
@@ -633,8 +641,9 @@ public class Simulate {
         return fileOut;
     }
 
-    public static StringBuilder updateCSVOutput1(StringBuilder fileOut, BigDecimal[] average_cost, BigDecimal[] sum_s_and_t,
-        double opt, double bt_dist, ArrayList<Pair<Integer, Integer>> algorithms_for_instance) {
+    public static StringBuilder updateCSVOutput1(StringBuilder fileOut, BigDecimal[] average_cost,
+        BigDecimal[] sum_s_and_t, double opt, double bt_dist,
+        ArrayList<Pair<Integer, Integer>> algorithms_for_instance) {
         fileOut.append("OPT," + opt + "\n");
         fileOut.append("BT," + bt_dist + "\n");
         fileOut.append(",");
@@ -653,8 +662,8 @@ public class Simulate {
         return fileOut;
     }
 
-    public static StringBuilder updateCSVOutput2(StringBuilder fileOut,
-        BigDecimal[] av_avCr, ArrayList<Pair<Integer, Integer>> algorithms_for_instance,
+    public static StringBuilder updateCSVOutput2(StringBuilder fileOut, BigDecimal[] av_avCr,
+        ArrayList<Pair<Integer, Integer>> algorithms_for_instance,
         ArrayList<ArrayList<BigDecimal[]>> comp_indiv_runs) {
         int count_alg = 0;
         for (Pair<Integer, Integer> alg_memsize : algorithms_for_instance) {
@@ -802,6 +811,35 @@ public class Simulate {
             for (int x = 0; x < num_runs_per_instance; ++x)
                 instance_runs.add(edgesToRemove);
             return instance_runs;
+        }
+
+        if (graphType.equals("grid") && graphTypeVariant) {
+            if (numNodes > 4) {
+                System.out.println("n<4, cannot run grid variant on n<5");
+
+
+                int basis = numNodes / 2 - 1;
+                int[] path_locations = new int[] {basis, 2 * numNodes + basis,
+                    (int) Math.pow(numNodes, numNodes) - basis};
+                int bridge = path_locations[rand.nextInt(path_locations.length)];
+
+                ArrayList<Edge> edgesToRemove = new ArrayList<Edge>();
+                for (int i = 0; i < numNodes; ++i) {
+                    int fromNodeKey = i * numNodes + basis;
+                    if (fromNodeKey != bridge) {
+                        int toNodeKey = fromNodeKey + 1;
+                        Node fromNode = new Node(null, fromNodeKey);
+                        Node toNode = new Node(null, toNodeKey);
+                        edgesToRemove.add(new Edge(toNode, fromNode, 1));
+                    }
+                }
+                for (int x = 0; x < num_runs_per_instance; ++x)
+                    instance_runs.add(edgesToRemove);
+                return instance_runs;
+            }
+            else {
+                System.out.println("Cannot perform simulation on grid variant for n<5");
+            }
         }
 
         if (k_approach_chosen == 0) {
