@@ -36,7 +36,7 @@ public class Backtrack {
                     path_distance++;
                     dist++;
                 }
-            }
+            } 
             
         }
     }

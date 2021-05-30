@@ -20,7 +20,7 @@ public class Edge implements Comparable<Edge>{
         
         if (compEdge.toNode.key == toNode.key && compEdge.fromNode.key == fromNode.key) return true;
         return false;
-    }
+    } 
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();

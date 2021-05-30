@@ -22,7 +22,7 @@ public class Graph {
     *
     */
     @SuppressWarnings("unchecked")
-    public Graph (int numNodes, int start, int target) {
+    public Graph (int numNodes, int start, int target) { 
         this.weight = 1;
         this.nodeList = new ArrayList<Node>();
         this.edgeList = new ArrayList<Edge>();
@@ -37,6 +37,7 @@ public class Graph {
             else if (node.key == target) this.target = node;
         }
     }
+    @Deprecated
     public Graph(int numNodes, String edgeList, int start, int target) {
         this.nodeList = new ArrayList<Node>();
         this.edgeList = new ArrayList<Edge>();
@@ -117,7 +118,6 @@ public class Graph {
         for (Edge edge : this.edgeList) {
             edge.fromNode.edgeList.add(edge);
         }
-        
     }
     
     private void createNewNodeList(Graph superGraph) {

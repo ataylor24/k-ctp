@@ -6,6 +6,8 @@ import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Hashtable;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Timer;
@@ -152,11 +154,12 @@ public class Simulate {
         seed = Long.parseLong(data[i++]); // used
         numNodes = Integer.parseInt(data[i++]); // used
         graphType = data[i++]; // used
+        
+        graphTypeVariant = Boolean.valueOf(data[i++]);
 
         if (graphType.equals("lollipop"))
             numNodes_line = Integer.parseInt(data[i++]);
-        if (graphType.equals("grid"))
-            graphTypeVariant = Boolean.valueOf(data[i++]);
+
 
         start = Integer.parseInt(data[i++]); // used //-1 random, -2 all
         target = Integer.parseInt(data[i++]); // used // same as above
@@ -815,8 +818,6 @@ public class Simulate {
 
         if (graphType.equals("grid") && graphTypeVariant) {
             if (numNodes > 4) {
-                System.out.println("n<4, cannot run grid variant on n<5");
-
 
                 int basis = numNodes / 2 - 1;
                 int[] path_locations = new int[] {basis, 2 * numNodes + basis,
@@ -840,6 +841,81 @@ public class Simulate {
             else {
                 System.out.println("Cannot perform simulation on grid variant for n<5");
             }
+        }
+        
+        if (graphType.equals("lollipop") && graphTypeVariant) {
+            //perform the same reduction done on the complete portion of the lollipop
+            int numNodesCycle = numNodes - numNodes_line;
+            
+            ArrayList<Edge> edgesToRemove = new ArrayList<Edge>();
+            ArrayList<Edge> edgesToRetain = new ArrayList<Edge>();
+            ArrayList<Node> redNodes = new ArrayList<Node>(); // previous blueNodes, necessary because nodes still retain all super info and need to be guided
+            ArrayList<Edge> copyList = null;
+            
+            Node linkToPathNode = superGraph.nodeList.get(numNodesCycle);
+            Node blueNode = superGraph.nodeList.get(numNodesCycle - 1);
+            int degree = 0; //the degree of edge removal from the complete graph
+            
+            redNodes.add(linkToPathNode);
+            Edge linkToPathEdge = new Edge(linkToPathNode, blueNode, 1);
+            edgesToRetain.add(linkToPathEdge);
+            edgesToRetain.add(linkToPathEdge.flipEdge());
+            
+            while (degree < numNodesCycle-2) {
+                copyList = new ArrayList<Edge>();
+                Edge chosenEdge = blueNode.edgeList.get(rand.nextInt(blueNode.edgeList.size()));
+                Node newBlueNode = chosenEdge.toNode; //blue Node
+                
+                if (!newBlueNode.equals(superGraph.start) && !redNodes.contains(newBlueNode)) {
+                    for (Edge markedToRemove: blueNode.edgeList) {
+                        if (!markedToRemove.equals(chosenEdge) && !edgesToRetain.contains(markedToRemove)) {
+                            edgesToRemove.add(markedToRemove);
+                        }
+                    }
+                    edgesToRetain.add(chosenEdge);
+                    edgesToRetain.add(chosenEdge.flipEdge());
+                    redNodes.add(blueNode);
+                    blueNode = newBlueNode;
+                    System.out.println(edgesToRemove);
+                    for (Edge removed: edgesToRemove) copyList.add(removed);
+                    instance_runs.add(copyList);
+                    degree++;
+                }
+            }
+            return instance_runs;
+        }
+        
+        if (graphType.equals("complete") && graphTypeVariant) {
+            ArrayList<Edge> edgesToRemove = new ArrayList<Edge>();
+            ArrayList<Edge> edgesToRetain = new ArrayList<Edge>();
+            ArrayList<Node> redNodes = new ArrayList<Node>(); //previous blueNodes, necessary because nodes still retain all super info and need to be guided
+            ArrayList<Edge> copyList = null;
+            
+            Node blueNode = superGraph.target;
+            int degree = 0; //the degree of edge removal from the complete graph
+            
+            while (degree < superGraph.nodeList.size()-2) {
+                copyList = new ArrayList<Edge>();
+                Edge chosenEdge = blueNode.edgeList.get(rand.nextInt(blueNode.edgeList.size()));
+                Node newBlueNode = chosenEdge.toNode; //blue Node
+                
+                if (!newBlueNode.equals(superGraph.start) && !redNodes.contains(newBlueNode)) {
+                    for (Edge markedToRemove: blueNode.edgeList) {
+                        if (!markedToRemove.equals(chosenEdge) && !edgesToRetain.contains(markedToRemove)) {
+                            edgesToRemove.add(markedToRemove);
+                        }
+                    }
+                    edgesToRetain.add(chosenEdge);
+                    edgesToRetain.add(chosenEdge.flipEdge());
+                    redNodes.add(blueNode);
+                    blueNode = newBlueNode;
+                    System.out.println(edgesToRemove);
+                    for (Edge removed: edgesToRemove) copyList.add(removed);
+                    instance_runs.add(copyList);
+                    degree++;
+                }
+            }
+            return instance_runs;
         }
 
         if (k_approach_chosen == 0) {

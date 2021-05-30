@@ -113,10 +113,10 @@ public class CsvLineWriter {
 
                             int num_runs_per_instance = 50;
                             int num_rand_runs = 1;
-                            boolean grid_variant = false;
+                            boolean graph_variant = false;
                             
                             String graph_params = "" + k + "," + k_approach.RAND_K.toString()
-                            + "," + seed + "," + numNodes + "," + graphType + ",";
+                            + "," + seed + "," + numNodes + "," + graphType + "," + graph_variant + ",";
                             
                             if (graphType.equals("lollipop")) {
                                 String lollipop_params =
@@ -130,7 +130,7 @@ public class CsvLineWriter {
                             } else if (graphType.equals("grid")) {
                                 
                                 
-                                graph_params = graph_params + grid_variant + "," + source
+                                graph_params = graph_params + "," + source
                                     + "," + target + "," + num_rand_s_and_t + ",[";
                                 
                                 main_str.append(graph_params);
