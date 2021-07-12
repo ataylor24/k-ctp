@@ -28,17 +28,19 @@ public class CsvLineWriter {
         int memSize;
         long seed = rand.nextLong();
         // String[] graphTypes = new String[] {"grid", "cyclic", "lollipop", "complete"};
-        String[] graphTypes = new String[] {"grid"};//, "complete"};
+        String[] graphTypes = new String[] {"cyclic"};//{"complete"};
 
         int line_counter = 0; // COUNTS THE LINE OF INPUT
 
-        String proj_directory = "test_grid";
-
+        String proj_directory = "5D_Cyclic";
+        
+        //cyclic needs to be 32 nodes
 
         for (String graphType : graphTypes) {
             // int numNodes = 20;
-            for (int numNodes = 6; numNodes < 7; ++numNodes) {
-                for (int j = 2; j < 3; ++j) {
+            for (int numNodes = 32; numNodes < 33; ++numNodes) {
+                for (int sourceShift = 0; sourceShift < numNodes; ++sourceShift) {
+                for (int numCopies = 0; numCopies < 50 ; ++numCopies) {
 
                     
 
@@ -76,33 +78,10 @@ public class CsvLineWriter {
                                 ter_str = new StringBuilder();
                             }
                             
-                            pw = new PrintWriter(new File(
-                                "/Users/alextaylor/Desktop/directed_study/" + proj_directory + "/"
-                                    + graphType + "_" + line_counter++ + "_Input.csv"));
-
-                            if (graphType.equals("cyclic")) {
-                                pw_sec = new PrintWriter(
-                                    new File("/Users/alextaylor/Desktop/directed_study/"
-                                        + proj_directory + "/" + graphType + "_" + "BR_"
-                                        + line_counter++ + "_Input.csv"));
-                                pw_ter = new PrintWriter(
-                                    new File("/Users/alextaylor/Desktop/directed_study/"
-                                        + proj_directory + "/" + graphType + "_" + "BRS_"
-                                        + line_counter++ + "_Input.csv"));
-                            }
-                            if (graphType.equals("lollipop")) {
-                                pw_sec = new PrintWriter(
-                                    new File("/Users/alextaylor/Desktop/directed_study/"
-                                        + proj_directory + "/" + graphType + "_" + "SR_"
-                                        + line_counter++ + "_Input.csv"));
-                                pw_ter = new PrintWriter(
-                                    new File("/Users/alextaylor/Desktop/directed_study/"
-                                        + proj_directory + "/" + graphType + "_" + "SRS_"
-                                        + line_counter++ + "_Input.csv"));
-                            }
+                            
                             
 
-                            int source = 0;
+                            int source = sourceShift;
                             int target;
                             if (graphType.equals("grid"))
                                 target = (int) Math.pow(numNodes, 2) - 1; // grid
@@ -130,7 +109,7 @@ public class CsvLineWriter {
                             } else if (graphType.equals("grid")) {
                                 
                                 
-                                graph_params = graph_params + "," + source
+                                graph_params = graph_params + source
                                     + "," + target + "," + num_rand_s_and_t + ",[";
                                 
                                 main_str.append(graph_params);
@@ -158,7 +137,7 @@ public class CsvLineWriter {
 
                             if (graphType.equals("cyclic")) {
                                 sec_str.append("" + algos.BiasedRandWalk.toString());
-                                ter_str.append("" + algos.BiasedRandWalkSmart + memSize);
+                                ter_str.append("" + algos.BiasedRandWalkSmart.toString());
 
                                 algorithms = "" + algos.BiasedRandWalkMemory + memSize + "_"
                                     + algos.BiasedRandWalkMemWeighting + memSize + "_"
@@ -208,6 +187,31 @@ public class CsvLineWriter {
                             String alg_suffix =
                                 "]," + num_runs_per_instance + "," + num_rand_runs + "\n";
                             main_str.append(alg_suffix);
+                            
+                            pw = new PrintWriter(new File(
+                                "/Users/alextaylor/Desktop/directed_study/" + proj_directory + "/"
+                                    + graphType + "_" + line_counter++ + ((graph_variant) ? "_variant":"") +"_Input.csv"));
+
+                            if (graphType.equals("cyclic")) {
+                                pw_sec = new PrintWriter(
+                                    new File("/Users/alextaylor/Desktop/directed_study/"
+                                        + proj_directory + "/" + graphType + "_" + "BR_"
+                                        + line_counter++ + "_Input.csv"));
+                                pw_ter = new PrintWriter(
+                                    new File("/Users/alextaylor/Desktop/directed_study/"
+                                        + proj_directory + "/" + graphType + "_" + "BRS_"
+                                        + line_counter++ + "_Input.csv"));
+                            }
+                            if (graphType.equals("lollipop")) {
+                                pw_sec = new PrintWriter(
+                                    new File("/Users/alextaylor/Desktop/directed_study/"
+                                        + proj_directory + "/" + graphType + "_" + "SR_"
+                                        + line_counter++ + ((graph_variant) ? "_variant":"") + "_Input.csv"));
+                                pw_ter = new PrintWriter(
+                                    new File("/Users/alextaylor/Desktop/directed_study/"
+                                        + proj_directory + "/" + graphType + "_" + "SRS_"
+                                        + line_counter++ + ((graph_variant) ? "_variant":"") + "_Input.csv"));
+                            }
 
                             if (graphType.equals("cyclic") || graphType.equals("lollipop")) {
                                 sec_str.append(alg_suffix);
@@ -230,7 +234,7 @@ public class CsvLineWriter {
 
                 }
 
-
+                }
             }
         }
 

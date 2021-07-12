@@ -40,6 +40,7 @@ public class Simulate {
 
     static int numNodes_line;
     static boolean graphTypeVariant;
+    static boolean output_variant = false;
 
     static int start; // used //-1 random, -2 all
     static int target; // used // same as above
@@ -54,6 +55,7 @@ public class Simulate {
 
     static String human_readable_file;
     static MathContext mc = new MathContext(2, RoundingMode.HALF_UP);
+    
 
     public static void main(String[] args) throws Throwable {
         /*
@@ -300,7 +302,9 @@ public class Simulate {
 
                     System.out.println("BT " + bt_dist);
                     System.out.println("OPT " + opt);
-
+                    
+                    //System.out.println(algs);
+                    
                     for (int i = 0; i < num_rand_runs; ++i) {
                         Thread[] threads = new Thread[algs[i].length];
                         for (int j = 0; j < algs[i].length; ++j) {
@@ -340,15 +344,40 @@ public class Simulate {
 
                     inst_counter++;
                     comp_indiv_runs.add(indiv_runs);
+                    if (output_variant) {
+                        fileOut = updateCSVOutput1(fileOut, average_cost, sum_s_and_t,
+                            avg_opt / num_rand_runs, avg_bt_dist / num_rand_runs, algorithms_for_instance);
+        
+                        fileOut.append("CR_AVG,");
+                        fileOut =
+                            updateCSVOutput2(fileOut, av_avCr, algorithms_for_instance, comp_indiv_runs);
+        
+                        fileOut.append("\n");
+                        
+                        avg_bt_dist = 0; // Average backtrack distance
+                        avg_opt = 0; // average optimal distance
+                        
+                        average_cost = new BigDecimal[algorithms_for_instance.size()];
+                        
+                        sums = new BigDecimal[algorithms_for_instance.size()];
+                        
+                        indiv_runs = new ArrayList<>();
+                        // System.out.println("size of alg " + algorithms_for_instance.size());
+                        for (int i = 0; i < algorithms_for_instance.size(); ++i) {
+                            indiv_runs.add(new BigDecimal[num_rand_runs]);
+                        }
+                    }
                 }
-                fileOut = updateCSVOutput1(fileOut, average_cost, sum_s_and_t,
-                    avg_opt / num_rand_runs, avg_bt_dist / num_rand_runs, algorithms_for_instance);
-
-                fileOut.append("CR_AVG,");
-                fileOut =
-                    updateCSVOutput2(fileOut, av_avCr, algorithms_for_instance, comp_indiv_runs);
-
-                fileOut.append("\n");
+                if (!output_variant) {
+                    fileOut = updateCSVOutput1(fileOut, average_cost, sum_s_and_t,
+                        avg_opt / num_rand_runs, avg_bt_dist / num_rand_runs, algorithms_for_instance);
+    
+                    fileOut.append("CR_AVG,");
+                    fileOut =
+                        updateCSVOutput2(fileOut, av_avCr, algorithms_for_instance, comp_indiv_runs);
+    
+                    fileOut.append("\n");
+                }
             }
             // times_elapsed_csv.writeToCsv();
 
@@ -804,13 +833,16 @@ public class Simulate {
         ArrayList<ArrayList<Edge>> instance_runs = new ArrayList<ArrayList<Edge>>();
         if (graphType.equals("cyclic")) {
             ArrayList<Edge> edgesToRemove = new ArrayList<Edge>();
-            for (int i = 0; i < superGraph.edgeList.size(); ++i) {
+            /*for (int i = 0; i < superGraph.edgeList.size(); ++i) {
                 Edge temp = superGraph.edgeList.get(i);
                 if (temp.toNode.key == start && temp.fromNode.key == target) {
                     edgesToRemove.add(superGraph.edgeList.get(i));
                     break;
                 }
-            }
+            }*/
+            Node fromNode = new Node(null, 0);
+            Node toNode = new Node(null, superGraph.target.key);
+            edgesToRemove.add(new Edge(toNode, fromNode, 1));
             for (int x = 0; x < num_runs_per_instance; ++x)
                 instance_runs.add(edgesToRemove);
             return instance_runs;
@@ -844,6 +876,7 @@ public class Simulate {
         }
         
         if (graphType.equals("lollipop") && graphTypeVariant) {
+            output_variant = true;
             //perform the same reduction done on the complete portion of the lollipop
             int numNodesCycle = numNodes - numNodes_line;
             
@@ -886,6 +919,7 @@ public class Simulate {
         }
         
         if (graphType.equals("complete") && graphTypeVariant) {
+            output_variant = true;
             ArrayList<Edge> edgesToRemove = new ArrayList<Edge>();
             ArrayList<Edge> edgesToRetain = new ArrayList<Edge>();
             ArrayList<Node> redNodes = new ArrayList<Node>(); //previous blueNodes, necessary because nodes still retain all super info and need to be guided

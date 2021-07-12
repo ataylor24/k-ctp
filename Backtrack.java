@@ -14,18 +14,18 @@ public class Backtrack {
     public void run() {
         Node curNode = sub_g.start;
         Edge next;
+        int path_distance = 0;
         
         while (curNode != sub_g.target) {
-            int path_distance = 0;
+            path_distance = 0;
             ArrayList<Node> path = guide_g.findShortestPath(guide_g.start, guide_g.target);
             
             
             for (Node potential : path) {
-                path_distance = 0;
                 next = checkEdgeList(curNode, potential);
                 
                 if (next == null) {
-                    dist += path_distance;
+                    //dist += path_distance;
                     guide_g = updateGraph(guide_g, curNode, potential);
                     
                     curNode = sub_g.start;
@@ -34,11 +34,12 @@ public class Backtrack {
                 else {
                     curNode = next.toNode;
                     path_distance++;
-                    dist++;
+                    //dist++;
                 }
             } 
             
         }
+        dist = path_distance;
     }
     
     public Edge checkEdgeList(Node cur, Node next) {
