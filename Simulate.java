@@ -180,8 +180,8 @@ public class Simulate {
 
         StringBuilder fileOut = new StringBuilder();
         fileOut.append(
-            "INPUT,REMOVAL_MODE,SEED,NUM_NODES,GRAPH_TYPE,SOURCE,TARGET,NUM_RAND_S&T,ALGORITHMS,NUM_RUNS_PER_INST,NUM_RAND_RUNS\n");
-        fileOut.append(input + "\n");
+            "INPUT,K,REMOVAL_MODE,SEED,NUM_NODES,GRAPH_TYPE,VARIANT,SOURCE,TARGET,NUM_RAND_S&T,ALGORITHMS,NUM_RUNS_PER_INST,NUM_RAND_RUNS\n");
+        fileOut.append("," + input + "\n");
         fileOut.append("OUTPUT\n");
 
         processCSVLine(fileOut);
@@ -225,8 +225,6 @@ public class Simulate {
                  * fileOut.append(",ALG,AVG_COST,COMP_RATIO,OPT,BT"); fileOut.append("\n");
                  */
 
-                int inst_counter = 0;
-
                 BigDecimal[] sum_s_and_t = new BigDecimal[algorithms_for_instance.size()];
                 for (int i = 0; i < sum_s_and_t.length; ++i) {
                     sum_s_and_t[i] = BigDecimal.ZERO;
@@ -237,13 +235,13 @@ public class Simulate {
                     av_avCr[i] = BigDecimal.ZERO;
                 }
 
-                int counter = 0;
-
                 double avg_bt_dist = 0; // Average backtrack distance
                 double avg_opt = 0; // average optimal distance
                 BigDecimal[] average_cost = new BigDecimal[algorithms_for_instance.size()];
                 ArrayList<ArrayList<BigDecimal[]>> comp_indiv_runs =
                     new ArrayList<ArrayList<BigDecimal[]>>();
+                
+                int inst_counter = 0;
 
                 for (ArrayList<Edge> edges_removed_from_sub : instance_runs) {
                     // System.out.println("THIS IS ONE SUBGRAPH " + counter++);
@@ -336,18 +334,21 @@ public class Simulate {
                         avCr[m] = (sums[m].divide(BigDecimal.valueOf(opt), mc))
                             .divide(BigDecimal.valueOf(num_rand_runs), mc);
                         av_avCr[m] = av_avCr[m].add(avCr[m]);
-                        average_cost[m] = sums[m].divide(BigDecimal.valueOf(num_rand_runs)); // was
+                        average_cost[m] = sums[m].divide(BigDecimal.valueOf(num_rand_runs), mc); // was
                         sum_s_and_t[m] = sum_s_and_t[m]
-                            .add(average_cost[m].divide(BigDecimal.valueOf(num_rand_runs)));
+                            .add(average_cost[m].divide(BigDecimal.valueOf(num_rand_runs), mc));
                         // num_runs_per_instance
                     }
 
                     inst_counter++;
                     comp_indiv_runs.add(indiv_runs);
-                    if (output_variant) {
+
+                    if (output_variant && inst_counter % num_runs_per_instance == 0) {
                         fileOut = updateCSVOutput1(fileOut, average_cost, sum_s_and_t,
-                            avg_opt / num_rand_runs, avg_bt_dist / num_rand_runs, algorithms_for_instance);
+                            avg_opt / num_runs_per_instance, avg_bt_dist / num_runs_per_instance, algorithms_for_instance);
         
+                        
+                        
                         fileOut.append("CR_AVG,");
                         fileOut =
                             updateCSVOutput2(fileOut, av_avCr, algorithms_for_instance, comp_indiv_runs);
@@ -356,16 +357,9 @@ public class Simulate {
                         
                         avg_bt_dist = 0; // Average backtrack distance
                         avg_opt = 0; // average optimal distance
-                        
-                        average_cost = new BigDecimal[algorithms_for_instance.size()];
-                        
-                        sums = new BigDecimal[algorithms_for_instance.size()];
-                        
-                        indiv_runs = new ArrayList<>();
-                        // System.out.println("size of alg " + algorithms_for_instance.size());
-                        for (int i = 0; i < algorithms_for_instance.size(); ++i) {
-                            indiv_runs.add(new BigDecimal[num_rand_runs]);
-                        }
+                        comp_indiv_runs.clear();
+                        for (int m = 0; m < sums.length; ++m) av_avCr[m] = BigDecimal.valueOf(0);
+                        for (int m = 0; m < sums.length; ++m) sum_s_and_t[m] = BigDecimal.valueOf(0);
                     }
                 }
                 if (!output_variant) {
@@ -688,7 +682,7 @@ public class Simulate {
         fileOut.append("\n");
         fileOut.append("AVG_COST,");
         for (int i = 0; i < average_cost.length; i++) {
-            fileOut.append(sum_s_and_t[i] + ",");
+            fileOut.append(sum_s_and_t[i].divide(BigDecimal.valueOf(num_runs_per_instance), mc) + ",");
         }
         fileOut.append("\n");
         return fileOut;
@@ -699,7 +693,7 @@ public class Simulate {
         ArrayList<ArrayList<BigDecimal[]>> comp_indiv_runs) {
         int count_alg = 0;
         for (Pair<Integer, Integer> alg_memsize : algorithms_for_instance) {
-            fileOut.append(av_avCr[count_alg].divide(BigDecimal.valueOf(num_runs_per_instance)));
+            fileOut.append(av_avCr[count_alg].divide(BigDecimal.valueOf(num_runs_per_instance), mc));
             if (count_alg >= algorithms_for_instance.size())
                 fileOut.append("\n");
             else
@@ -911,7 +905,7 @@ public class Simulate {
                     blueNode = newBlueNode;
                     System.out.println(edgesToRemove);
                     for (Edge removed: edgesToRemove) copyList.add(removed);
-                    instance_runs.add(copyList);
+                    for (int i = 0; i < num_runs_per_instance; ++i) instance_runs.add(copyList);
                     degree++;
                 }
             }
@@ -943,9 +937,9 @@ public class Simulate {
                     edgesToRetain.add(chosenEdge.flipEdge());
                     redNodes.add(blueNode);
                     blueNode = newBlueNode;
-                    System.out.println(edgesToRemove);
+                    
                     for (Edge removed: edgesToRemove) copyList.add(removed);
-                    instance_runs.add(copyList);
+                    for (int i = 0; i < num_runs_per_instance; ++i) instance_runs.add(copyList);
                     degree++;
                 }
             }
