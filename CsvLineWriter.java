@@ -28,19 +28,19 @@ public class CsvLineWriter {
         int memSize;
         long seed = rand.nextLong();
         // String[] graphTypes = new String[] {"grid", "cyclic", "lollipop", "complete"};
-        String[] graphTypes = new String[] {"cyclic"};//{"complete"};
+        String[] graphTypes = new String[] {"grid"/*, "grid", "lollipop"*/};//{"complete"};
 
         int line_counter = 0; // COUNTS THE LINE OF INPUT
 
-        String proj_directory = "5D_Cyclic";
+        String proj_directory = "7D_Stress_Test/grid";
         
         //cyclic needs to be 32 nodes
 
         for (String graphType : graphTypes) {
             // int numNodes = 20;
-            for (int numNodes = 32; numNodes < 33; ++numNodes) {
-                for (int sourceShift = 0; sourceShift < numNodes; ++sourceShift) {
-                for (int numCopies = 0; numCopies < 50 ; ++numCopies) {
+            for (int numNodes = 100; numNodes < 10000; numNodes+=100) {
+                for (int sourceShift = 0; sourceShift < 1/*numNodes*/; ++sourceShift) {
+                for (int numCopies = 0; numCopies < 1 ; ++numCopies) {
 
                     
 
@@ -92,7 +92,7 @@ public class CsvLineWriter {
 
                             int num_runs_per_instance = 50;
                             int num_rand_runs = 1;
-                            boolean graph_variant = false;
+                            boolean graph_variant = true;
                             
                             String graph_params = "" + k + "," + k_approach.RAND_K.toString()
                             + "," + seed + "," + numNodes + "," + graphType + "," + graph_variant + ",";

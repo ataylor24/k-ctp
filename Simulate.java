@@ -215,7 +215,8 @@ public class Simulate {
 
 
                 ArrayList<ArrayList<Edge>> instance_runs = edgeRemovalPerInstance(superGraph);
-                // System.out.println(instance_runs);
+                System.out.println("INPUT SIZE");
+                System.out.println(instance_runs.size());
 
                 // for loop for each edgelist removal to create a given subgraph
                 // create for loop for algo's
@@ -261,7 +262,7 @@ public class Simulate {
 
                     Graph subGraph = new Graph(superGraph, edges_removed_from_sub);
 
-                    System.out.println(subGraph);
+                    //System.out.println(subGraph);
 
                     int opt = subGraph.calcDistance(subGraph.start, subGraph.target);
 
@@ -903,9 +904,9 @@ public class Simulate {
                     edgesToRetain.add(chosenEdge.flipEdge());
                     redNodes.add(blueNode);
                     blueNode = newBlueNode;
-                    System.out.println(edgesToRemove);
                     for (Edge removed: edgesToRemove) copyList.add(removed);
-                    for (int i = 0; i < num_runs_per_instance; ++i) instance_runs.add(copyList);
+                    //for (int i = 0; i < num_runs_per_instance; ++i) instance_runs.add(copyList);
+                    instance_runs.add(copyList);
                     degree++;
                 }
             }
