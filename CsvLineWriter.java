@@ -19,7 +19,7 @@ public class CsvLineWriter {
         PrintWriter pw_ter = null;
 
 
-        int[] k_sizes = new int[] {2};// new int[] {5, 50, 250, 500, 1000};//
+        int[] k_sizes = new int[] {0};// new int[] {5, 50, 250, 500, 1000};//
 
         int[] memSize_sizes = new int[] {5};// new int[] {5, 50, 500, 5000};//
 
@@ -32,13 +32,13 @@ public class CsvLineWriter {
 
         int line_counter = 0; // COUNTS THE LINE OF INPUT
 
-        String proj_directory = "7D_Stress_Test/grid";
+        String proj_directory = "split_input";
         
         //cyclic needs to be 32 nodes
 
         for (String graphType : graphTypes) {
             // int numNodes = 20;
-            for (int numNodes = 100; numNodes < 10000; numNodes+=100) {
+            for (int numNodes = 11; numNodes < 12; numNodes+=1) {
                 for (int sourceShift = 0; sourceShift < 1/*numNodes*/; ++sourceShift) {
                 for (int numCopies = 0; numCopies < 1 ; ++numCopies) {
 
@@ -189,26 +189,26 @@ public class CsvLineWriter {
                             main_str.append(alg_suffix);
                             
                             pw = new PrintWriter(new File(
-                                "/Users/alextaylor/Desktop/directed_study/" + proj_directory + "/"
-                                    + graphType + "_" + line_counter++ + ((graph_variant) ? "_variant":"") +"_Input.csv"));
+                                "/Users/agoyal/Desktop/directed_study/" + proj_directory + "/"
+                                    + graphType + "_" + line_counter++ + ((graph_variant) ? "_variant":"") + "_" + numNodes + "_Input.csv"));
 
                             if (graphType.equals("cyclic")) {
                                 pw_sec = new PrintWriter(
-                                    new File("/Users/alextaylor/Desktop/directed_study/"
+                                    new File("/Users/agoyal/Desktop/directed_study/"
                                         + proj_directory + "/" + graphType + "_" + "BR_"
                                         + line_counter++ + "_Input.csv"));
                                 pw_ter = new PrintWriter(
-                                    new File("/Users/alextaylor/Desktop/directed_study/"
+                                    new File("/Users/agoyal/Desktop/directed_study/"
                                         + proj_directory + "/" + graphType + "_" + "BRS_"
                                         + line_counter++ + "_Input.csv"));
                             }
                             if (graphType.equals("lollipop")) {
                                 pw_sec = new PrintWriter(
-                                    new File("/Users/alextaylor/Desktop/directed_study/"
+                                    new File("/Users/agoyal/Desktop/directed_study/"
                                         + proj_directory + "/" + graphType + "_" + "SR_"
                                         + line_counter++ + ((graph_variant) ? "_variant":"") + "_Input.csv"));
                                 pw_ter = new PrintWriter(
-                                    new File("/Users/alextaylor/Desktop/directed_study/"
+                                    new File("/Users/agoyal/Desktop/directed_study/"
                                         + proj_directory + "/" + graphType + "_" + "SRS_"
                                         + line_counter++ + ((graph_variant) ? "_variant":"") + "_Input.csv"));
                             }
